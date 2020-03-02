@@ -1,5 +1,7 @@
 # EFPlusIssue581
 
+https://github.com/zzzprojects/EntityFramework-Plus/issues/581#issuecomment-592981695
+
 With package Z.EntityFramework.Plus.EFCore version 3.0.30 the unit test works.
 
 
