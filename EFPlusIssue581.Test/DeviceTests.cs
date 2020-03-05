@@ -72,7 +72,6 @@ namespace EFPlusIssue581.Test
             Assert.IsTrue(devices.Count == 1);
 
             await deviceRepository.GetQueryable()
-                            .AsNoTracking()
                             .Where(x => !x.Active)
                             .UpdateAsync(x => new Device() { Name = x.Name + " - INACTIVE" });
 
