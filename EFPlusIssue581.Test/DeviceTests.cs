@@ -13,12 +13,11 @@ namespace EFPlusIssue581.Test
 {
     public class Tests
     {
-        private DatabaseContext DatabaseContext;
+        private DbContextOptionsBuilder<DatabaseContext> databaseContextBuilder;
 
         [SetUp]
         public void Setup()
         {
-            DbContextOptionsBuilder<DatabaseContext> databaseContextBuilder;
 
             databaseContextBuilder = new DbContextOptionsBuilder<DatabaseContext>()
                 .EnableSensitiveDataLogging()
@@ -28,21 +27,21 @@ namespace EFPlusIssue581.Test
                     .ConfigureWarnings(x => x.Ignore(InMemoryEventId.TransactionIgnoredWarning))
                     .EnableSensitiveDataLogging();
 
-            this.DatabaseContext = new DatabaseContext(databaseContextBuilder.Options);
-
             BatchUpdateManager.InMemoryDbContextFactory = () =>
             {
-                return this.DatabaseContext;
+                return new DatabaseContext(databaseContextBuilder.Options);
             };
         }
 
         [Test]
         public async Task Test1()
         {
+            DatabaseContext databaseContext;
             DeviceRepository deviceRepository;
             List<Device> devices;
 
-            deviceRepository = new DeviceRepository(this.DatabaseContext);
+            databaseContext = new DatabaseContext(databaseContextBuilder.Options);
+            deviceRepository = new DeviceRepository(databaseContext);
 
             devices = deviceRepository.GetAll(true);
 
@@ -62,7 +61,7 @@ namespace EFPlusIssue581.Test
 
             deviceRepository.AddRange(devices);
 
-            this.DatabaseContext.SaveChanges();
+            databaseContext.SaveChanges();
 
             devices = deviceRepository.GetAll(true);
 
@@ -73,8 +72,12 @@ namespace EFPlusIssue581.Test
             Assert.IsTrue(devices.Count == 1);
 
             await deviceRepository.GetQueryable()
+                            .AsNoTracking()
                             .Where(x => !x.Active)
                             .UpdateAsync(x => new Device() { Name = x.Name + " - INACTIVE" });
+
+            databaseContext = new DatabaseContext(databaseContextBuilder.Options);
+            deviceRepository = new DeviceRepository(databaseContext);
 
             devices = deviceRepository.GetAll(true);
 
